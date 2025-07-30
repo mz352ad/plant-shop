@@ -1,0 +1,709 @@
+/* Базові стилі */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Хедер */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: 10vh;
+    min-height: 60px;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    height: 100%;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.logo i {
+    font-size: 1.8rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.search-btn, .menu-btn, .admin-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.search-btn:hover, .menu-btn:hover, .admin-btn:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+/* Пошук */
+.search-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-overlay.active {
+    display: flex;
+}
+
+.search-container {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.search-container input:focus {
+    border-color: #4CAF50;
+}
+
+.close-search {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #666;
+}
+
+/* Основний контент */
+.main-content {
+    margin-top: 10vh;
+    margin-bottom: 10vh;
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Категорії */
+.categories {
+    margin-bottom: 30px;
+}
+
+.categories-container {
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.categories-container::-webkit-scrollbar {
+    display: none;
+}
+
+.category-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px 20px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 80px;
+    white-space: nowrap;
+}
+
+.category-btn.active {
+    background: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.category-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.category-btn i {
+    font-size: 1.5rem;
+}
+
+.category-btn span {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Каталог рослин */
+.plants-grid {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.plant-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    aspect-ratio: 9/16;
+    max-height: 400px;
+}
+
+.plant-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.plant-image {
+    width: 100%;
+    height: 70%;
+    object-fit: cover;
+    background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 3rem;
+}
+
+.plant-info {
+    padding: 15px;
+    height: 30%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.plant-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.plant-category {
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.plant-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #4CAF50;
+}
+
+/* Тап-бар */
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    z-index: 1000;
+    height: 10vh;
+    min-height: 60px;
+}
+
+.tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 10px;
+    transition: all 0.3s;
+    position: relative;
+    color: #666;
+}
+
+.tab-btn.active {
+    color: #4CAF50;
+}
+
+.tab-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.tab-btn i {
+    font-size: 1.3rem;
+}
+
+.tab-btn span {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.cart-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #ff4444;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+/* Модальне вікно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow-y: auto;
+    position: relative;
+    width: 100%;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.plant-details {
+    padding: 20px;
+}
+
+.plant-detail-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 4rem;
+}
+
+.plant-detail-name {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.plant-detail-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4CAF50;
+    margin-bottom: 20px;
+}
+
+.plant-detail-category {
+    background: #e8f5e8;
+    color: #4CAF50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.plant-detail-description {
+    color: #666;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.care-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.care-info h3 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+}
+
+.care-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.care-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.care-value {
+    color: #333;
+    font-weight: 600;
+}
+
+.contact-buttons {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.contact-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.3s;
+}
+
+.contact-btn:hover {
+    transform: translateY(-2px);
+}
+
+.viber-btn {
+    background: #7360f2;
+    color: white;
+}
+
+.telegram-btn {
+    background: #0088cc;
+    color: white;
+}
+
+.add-to-cart-btn {
+    width: 100%;
+    padding: 15px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-to-cart-btn:hover {
+    background: #45a049;
+}
+
+/* Адаптивність для різних розмірів */
+@media (max-width: 768px) {
+    .plants-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .plant-card {
+        aspect-ratio: 9/16;
+        max-height: 350px;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+    
+    .header-content {
+        padding: 0 15px;
+    }
+    
+    .logo {
+        font-size: 1.3rem;
+    }
+    
+    .logo i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .plants-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .plant-card {
+        aspect-ratio: 9/16;
+        max-height: 300px;
+    }
+    
+    .main-content {
+        padding: 12px;
+    }
+    
+    .categories-container {
+        gap: 10px;
+    }
+    
+    .category-btn {
+        padding: 12px 15px;
+        min-width: 70px;
+    }
+    
+    .category-btn i {
+        font-size: 1.3rem;
+    }
+    
+    .category-btn span {
+        font-size: 0.8rem;
+    }
+    
+    .plant-detail-image {
+        height: 250px;
+    }
+    
+    .plant-detail-name {
+        font-size: 1.5rem;
+    }
+    
+    .contact-buttons {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 360px) {
+    .plants-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .plant-card {
+        aspect-ratio: 9/16;
+        max-height: 400px;
+    }
+    
+    .main-content {
+        padding: 10px;
+    }
+    
+    .header-content {
+        padding: 0 10px;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+    }
+    
+    .logo i {
+        font-size: 1.4rem;
+    }
+    
+    .categories-container {
+        gap: 8px;
+    }
+    
+    .category-btn {
+        padding: 10px 12px;
+        min-width: 60px;
+    }
+    
+    .category-btn i {
+        font-size: 1.2rem;
+    }
+    
+    .category-btn span {
+        font-size: 0.7rem;
+    }
+    
+    .plant-detail-image {
+        height: 200px;
+    }
+    
+    .plant-detail-name {
+        font-size: 1.3rem;
+    }
+    
+    .plant-detail-price {
+        font-size: 1.3rem;
+    }
+    
+    .contact-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .contact-btn {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+    
+    .add-to-cart-btn {
+        padding: 12px;
+        font-size: 1rem;
+    }
+}
+
+/* Анімації */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.plant-card {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Стилі для повідомлень про відсутність результатів */
+.no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-results h3 {
+    margin: 20px 0 10px 0;
+    color: #333;
+}
+
+.no-results p {
+    margin: 0 0 20px 0;
+    line-height: 1.5;
+}
+
+.admin-panel-btn {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.admin-panel-btn:hover {
+    background: linear-gradient(135deg, #45a049, #4CAF50);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.admin-panel-btn i {
+    margin-right: 8px;
+}
+
+/* Покращення для мобільних пристроїв */
+@media (hover: none) {
+    .plant-card:hover {
+        transform: none;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    }
+    
+    .category-btn:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .contact-btn:hover {
+        transform: none;
+    }
+    
+    .admin-panel-btn:hover {
+        transform: none;
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+} 

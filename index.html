@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlantShop - Магазин рослин</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-seedling"></i>
+                <span>PlantShop</span>
+            </div>
+            <div class="header-actions">
+                <button class="search-btn" id="searchBtn">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="admin-btn" id="adminBtn" title="Адмін-панель">
+                    <i class="fas fa-cog"></i>
+                </button>
+                <button class="menu-btn" id="menuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Пошук (прихований за замовчуванням) -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-container">
+            <input type="text" placeholder="Пошук рослин..." id="searchInput">
+            <button class="close-search" id="closeSearch">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Основний контент -->
+    <main class="main-content">
+        <!-- Категорії -->
+        <section class="categories">
+            <div class="categories-container">
+                <button class="category-btn active" data-category="all">
+                    <i class="fas fa-home"></i>
+                    <span>Всі</span>
+                </button>
+                <button class="category-btn" data-category="indoor">
+                    <i class="fas fa-leaf"></i>
+                    <span>Кімнатні</span>
+                </button>
+                <button class="category-btn" data-category="garden">
+                    <i class="fas fa-tree"></i>
+                    <span>Садові</span>
+                </button>
+                <button class="category-btn" data-category="exotic">
+                    <i class="fas fa-palm-tree"></i>
+                    <span>Екзотичні</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Каталог рослин -->
+        <section class="plants-catalog">
+            <div class="plants-grid" id="plantsGrid">
+                <!-- Рослини будуть додаватися через JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Тап-бар -->
+    <nav class="tab-bar">
+        <button class="tab-btn active" data-tab="home">
+            <i class="fas fa-home"></i>
+            <span>Головна</span>
+        </button>
+        <button class="tab-btn" data-tab="categories">
+            <i class="fas fa-th-large"></i>
+            <span>Категорії</span>
+        </button>
+        <button class="tab-btn" data-tab="cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Кошик</span>
+            <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="tab-btn" data-tab="profile">
+            <i class="fas fa-user"></i>
+            <span>Профіль</span>
+        </button>
+    </nav>
+
+    <!-- Модальне вікно для деталей рослини -->
+    <div class="modal-overlay" id="plantModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="plant-details" id="plantDetails">
+                <!-- Деталі рослини будуть додаватися через JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
