@@ -130,13 +130,13 @@ function showPlantDetails(plant) {
                 <p>${plant.care || 'Інформація про догляд'}</p>
             </div>
             <div class="plant-actions">
-                <button class="contact-btn viber-btn" onclick="contactViber('${plant.viber || '+380123456789}')">
+                <button class="contact-btn viber-btn" onclick="contactViber('" + (plant.viber || '+380123456789') + "')">
                     <i class="fab fa-viber"></i> Viber
                 </button>
-                <button class="contact-btn telegram-btn" onclick="contactTelegram('${plant.telegram || '@plantshop'}')">
+                <button class="contact-btn telegram-btn" onclick="contactTelegram('" + (plant.telegram || '@plantshop') + "')">
                     <i class="fab fa-telegram"></i> Telegram
                 </button>
-                <button class="add-to-cart-btn" onclick="addToCart('${plant.id}')">
+                <button class="add-to-cart-btn" onclick="addToCart('" + plant.id + "')">
                     <i class="fas fa-shopping-cart"></i> Додати в кошик
                 </button>
             </div>
@@ -361,16 +361,16 @@ function showCart() {
                 <p>${item.price} грн</p>
             </div>
             <div class="cart-item-quantity">
-                <button onclick="updateQuantity('${item.id}', -1)">-</button>
-                <span>${item.quantity}</span>
-                <button onclick="updateQuantity('${item.id}', 1)">+</button>
+                <button onclick="updateQuantity('" + item.id + "', -1)">-</button>
+                <span>" + item.quantity + "</span>
+                <button onclick="updateQuantity('" + item.id + "', 1)">+</button>
             </div>
             <div class="cart-item-total">
                 ${item.price * item.quantity} грн
             </div>
-            <button class="remove-item" onclick="removeFromCart('${item.id}')">
-                <i class="fas fa-trash"></i>
-            </button>
+                            <button class="remove-item" onclick="removeFromCart('" + item.id + "')">
+                    <i class="fas fa-trash"></i>
+                </button>
         `;
         plantsGrid.appendChild(cartItem);
     });
@@ -413,7 +413,7 @@ function removeFromCart(plantId) {
 // Оформлення замовлення
 function checkout() {
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    alert(`Замовлення на суму ${total} грн оформлено! Зв'яжіться з нами через Viber або Telegram для підтвердження.`);
+    alert('Замовлення на суму ' + total + ' грн оформлено! Зв\'яжіться з нами через Viber або Telegram для підтвердження.');
     cart = [];
     updateCartDisplay();
     saveCartToStorage();
