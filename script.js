@@ -148,7 +148,7 @@ function showPlantDetails(plant) {
 
 // Контакт через Viber
 function contactViber(phone) {
-    window.open(`viber://chat?number=${phone}`, '_blank');
+    window.open('viber://chat?number=' + phone, '_blank');
 }
 
 // Контакт через Telegram
@@ -156,7 +156,7 @@ function contactTelegram(username) {
     if (username.startsWith('@')) {
         username = username.substring(1);
     }
-    window.open(`https://t.me/${username}`, '_blank');
+    window.open('https://t.me/' + username, '_blank');
 }
 
 // Додавання в кошик
