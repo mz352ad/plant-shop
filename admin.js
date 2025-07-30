@@ -9,6 +9,14 @@ const messageContainer = document.getElementById('message-container');
 const navBtns = document.querySelectorAll('.nav-btn');
 const adminSections = document.querySelectorAll('.admin-section');
 const importFile = document.getElementById('importFile');
+const imageFile = document.getElementById('imageFile');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const removeImage = document.getElementById('removeImage');
+
+// Фіксовані контакти
+const FIXED_VIBER = '+380966970439';
+const FIXED_TELEGRAM = '+380966970439';
 
 // Завантаження рослин з Firebase
 async function loadPlantsFromFirebase() {
@@ -162,8 +170,16 @@ function editPlant(plantId) {
     document.getElementById('plantImage').value = plant.image || '';
     document.getElementById('plantDescription').value = plant.description || '';
     document.getElementById('plantCare').value = plant.care || '';
-    document.getElementById('plantViber').value = plant.viber || '';
-    document.getElementById('plantTelegram').value = plant.telegram || '';
+    document.getElementById('plantViber').value = FIXED_VIBER;
+    document.getElementById('plantTelegram').value = FIXED_TELEGRAM;
+    
+    // Показати попередній перегляд зображення якщо воно є
+    if (plant.image && plant.image.startsWith('data:image')) {
+        previewImg.src = plant.image;
+        imagePreview.style.display = 'block';
+    } else {
+        imagePreview.style.display = 'none';
+    }
     
     // Змінити текст кнопки
     const submitBtn = addPlantForm.querySelector('button[type="submit"]');
@@ -206,8 +222,8 @@ addPlantForm.addEventListener('submit', async (e) => {
         image: formData.get('image'),
         description: formData.get('description'),
         care: formData.get('care'),
-        viber: formData.get('viber'),
-        telegram: formData.get('telegram')
+        viber: FIXED_VIBER,
+        telegram: FIXED_TELEGRAM
     };
 
     // Додати ID якщо це редагування
@@ -302,7 +318,38 @@ importFile.addEventListener('change', async (e) => {
     }
 });
 
+// Функції для роботи з фото
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            document.getElementById('plantImage').value = imageData;
+            previewImg.src = imageData;
+            imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImagePreview() {
+    document.getElementById('plantImage').value = '';
+    imagePreview.style.display = 'none';
+    imageFile.value = '';
+}
+
 // Ініціалізація при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
     loadPlantsFromFirebase();
+    
+    // Обробники для завантаження фото
+    imageFile.addEventListener('change', handleImageUpload);
+    removeImage.addEventListener('click', removeImagePreview);
+    
+    // Встановлюємо фіксовані контакти
+    document.getElementById('plantViber').value = FIXED_VIBER;
+    document.getElementById('plantTelegram').value = FIXED_TELEGRAM;
+    document.getElementById('plantViber').readOnly = true;
+    document.getElementById('plantTelegram').readOnly = true;
 }); 

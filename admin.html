@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlantShop - Адмін-панель</title>
+    <title>Inna-Flowers - Адмін-панель</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -198,12 +198,43 @@
         .file-label:hover {
             background: #0056b3;
         }
+        
+        .image-upload-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .image-upload-container input[type="text"] {
+            flex: 1;
+        }
+        
+        .image-preview {
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
     <div class="admin-container">
         <header>
-            <h1><i class="fas fa-seedling"></i> PlantShop - Адмін-панель</h1>
+            <h1><i class="fas fa-seedling"></i> Inna-Flowers - Адмін-панель</h1>
             <p>Управління каталогом рослин</p>
         </header>
 
@@ -240,8 +271,20 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="plantImage">Зображення (емодзі або URL)</label>
-                    <input type="text" id="plantImage" name="image" placeholder="🌿 або https://example.com/image.jpg">
+                    <label for="plantImage">Зображення</label>
+                    <div class="image-upload-container">
+                        <input type="text" id="plantImage" name="image" placeholder="🌿 або https://example.com/image.jpg">
+                        <label for="imageFile" class="file-label">
+                            <i class="fas fa-camera"></i> Завантажити фото
+                        </label>
+                        <input type="file" id="imageFile" class="file-input" accept="image/*" style="display: none;">
+                    </div>
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Попередній перегляд">
+                        <button type="button" id="removeImage" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Видалити
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="form-group">

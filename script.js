@@ -130,10 +130,10 @@ function showPlantDetails(plant) {
                 <p>${plant.care || 'Інформація про догляд'}</p>
             </div>
             <div class="plant-actions">
-                <button class="contact-btn viber-btn" onclick="contactViber('" + (plant.viber || '+380123456789') + "')">
+                <button class="contact-btn viber-btn" onclick="contactViber('+380966970439')">
                     <i class="fab fa-viber"></i> Viber
                 </button>
-                <button class="contact-btn telegram-btn" onclick="contactTelegram('" + (plant.telegram || '@plantshop') + "')">
+                <button class="contact-btn telegram-btn" onclick="contactTelegram('+380966970439')">
                     <i class="fab fa-telegram"></i> Telegram
                 </button>
                 <button class="add-to-cart-btn" onclick="addToCart('" + plant.id + "')">
@@ -152,11 +152,10 @@ function contactViber(phone) {
 }
 
 // Контакт через Telegram
-function contactTelegram(username) {
-    if (username.startsWith('@')) {
-        username = username.substring(1);
-    }
-    window.open('https://t.me/' + username, '_blank');
+function contactTelegram(phone) {
+    // Видаляємо + з номера для Telegram
+    const cleanPhone = phone.replace('+', '');
+    window.open('https://t.me/' + cleanPhone, '_blank');
 }
 
 // Додавання в кошик

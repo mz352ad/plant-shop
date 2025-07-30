@@ -1,6 +1,6 @@
 // Firebase configuration for PlantShop
 const firebaseConfig = {
-  apiKey: "AIzaSyC1WjIdVum2HB1AQEXeeCc41gFB3_Mk2eI",
+  apiKey: "AIzaSyC1WjIdVum2HBlAQEXeeCc41gFB3_Mk2eI",
   authDomain: "plant-shop-35729.firebaseapp.com",
   projectId: "plant-shop-35729",
   storageBucket: "plant-shop-35729.firebasestorage.app",
