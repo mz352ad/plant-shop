@@ -1,138 +1,151 @@
 // Глобальні змінні
 let plantsData = [];
-let nextId = 1;
+let editingPlantId = null;
 
 // DOM елементи
 const addPlantForm = document.getElementById('addPlantForm');
 const plantsList = document.getElementById('plantsList');
-const successMessage = document.getElementById('successMessage');
-const errorMessage = document.getElementById('errorMessage');
-const successText = document.getElementById('successText');
-const errorText = document.getElementById('errorText');
-const adminNavBtns = document.querySelectorAll('.admin-nav-btn');
-const formSections = document.querySelectorAll('.form-section');
+const messageContainer = document.getElementById('message-container');
+const navBtns = document.querySelectorAll('.nav-btn');
+const adminSections = document.querySelectorAll('.admin-section');
+const importFile = document.getElementById('importFile');
 
-// Ініціалізація
-document.addEventListener('DOMContentLoaded', function() {
-    loadPlantsFromStorage();
-    setupEventListeners();
-    renderPlantsList();
-});
-
-// Налаштування обробників подій
-function setupEventListeners() {
-    // Навігація адмін-панелі
-    adminNavBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const section = btn.dataset.section;
-            switchSection(section);
+// Завантаження рослин з Firebase
+async function loadPlantsFromFirebase() {
+    try {
+        const snapshot = await db.collection('plants').get();
+        plantsData = [];
+        snapshot.forEach(doc => {
+            const plant = { id: doc.id, ...doc.data() };
+            plantsData.push(plant);
         });
-    });
-
-    // Форма додавання рослини
-    addPlantForm.addEventListener('submit', handleAddPlant);
-}
-
-// Переключення між розділами
-function switchSection(section) {
-    // Оновлення активних кнопок
-    adminNavBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.section === section);
-    });
-
-    // Оновлення активних розділів
-    formSections.forEach(formSection => {
-        formSection.classList.toggle('active', formSection.id === section + 'Section');
-    });
-
-    // Оновлення списку рослин при переключенні
-    if (section === 'list') {
         renderPlantsList();
+    } catch (error) {
+        console.error('Помилка завантаження рослин:', error);
+        showMessage('Помилка завантаження рослин', 'error');
     }
 }
 
-// Обробка додавання рослини
-function handleAddPlant(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(addPlantForm);
-    const plantData = {
-        id: nextId++,
-        name: document.getElementById('plantName').value,
-        category: document.getElementById('plantCategory').value,
-        categoryName: getCategoryName(document.getElementById('plantCategory').value),
-        price: parseInt(document.getElementById('plantPrice').value),
-        image: document.getElementById('plantImage').value || '🌿',
-        description: document.getElementById('plantDescription').value,
-        care: {
-            lighting: document.getElementById('careLighting').value || 'Розсіяне світло',
-            watering: document.getElementById('careWatering').value || 'Помірний полив',
-            temperature: document.getElementById('careTemperature').value || '18-25°C',
-            humidity: document.getElementById('careHumidity').value || 'Середня'
-        },
-        viber: document.getElementById('contactViber').value || '+380501234567',
-        telegram: document.getElementById('contactTelegram').value || '@plantshop_ua'
-    };
-
-    // Валідація
-    if (!plantData.name || !plantData.category || !plantData.price || !plantData.description) {
-        showError('Будь ласка, заповніть всі обов\'язкові поля');
-        return;
+// Збереження рослини в Firebase
+async function savePlantToFirebase(plant) {
+    try {
+        if (plant.id) {
+            // Оновлення існуючої рослини
+            await db.collection('plants').doc(plant.id).update(plant);
+        } else {
+            // Додавання нової рослини
+            const docRef = await db.collection('plants').add(plant);
+            plant.id = docRef.id;
+        }
+        await loadPlantsFromFirebase(); // Перезавантажити дані
+        return true;
+    } catch (error) {
+        console.error('Помилка збереження рослини:', error);
+        return false;
     }
-
-    // Додавання рослини
-    plantsData.push(plantData);
-    savePlantsToStorage();
-    
-    // Очищення форми
-    addPlantForm.reset();
-    
-    // Показ повідомлення про успіх
-    showSuccess(`Рослину "${plantData.name}" успішно додано!`);
-    
-    // Оновлення списку
-    renderPlantsList();
 }
 
-// Отримання назви категорії
-function getCategoryName(category) {
-    const categories = {
-        'indoor': 'Кімнатні',
-        'garden': 'Садові',
-        'exotic': 'Екзотичні'
-    };
-    return categories[category] || 'Інші';
+// Видалення рослини з Firebase
+async function deletePlantFromFirebase(plantId) {
+    try {
+        await db.collection('plants').doc(plantId).delete();
+        await loadPlantsFromFirebase(); // Перезавантажити дані
+        return true;
+    } catch (error) {
+        console.error('Помилка видалення рослини:', error);
+        return false;
+    }
+}
+
+// Показ повідомлення
+function showMessage(message, type = 'success') {
+    messageContainer.innerHTML = `
+        <div class="message ${type}">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            ${message}
+        </div>
+    `;
+    
+    setTimeout(() => {
+        messageContainer.innerHTML = '';
+    }, 5000);
 }
 
 // Відображення списку рослин
 function renderPlantsList() {
     if (plantsData.length === 0) {
         plantsList.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #666;">
-                <i class="fas fa-seedling" style="font-size: 3rem; margin-bottom: 20px; color: #ccc;"></i>
-                <h3>Рослини не знайдено</h3>
+            <div class="no-results">
+                <i class="fas fa-seedling" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
+                <h3>Рослини ще не додані</h3>
                 <p>Додайте першу рослину через форму вище</p>
             </div>
         `;
         return;
     }
 
-    plantsList.innerHTML = plantsData.map(plant => `
-        <div class="plant-item" data-id="${plant.id}">
+    plantsList.innerHTML = '';
+    
+    plantsData.forEach(plant => {
+        const plantItem = document.createElement('div');
+        plantItem.className = 'plant-item';
+        
+        const categoryNames = {
+            'indoor': 'Кімнатні',
+            'garden': 'Садові',
+            'exotic': 'Екзотичні'
+        };
+
+        plantItem.innerHTML = `
+            <div class="plant-header">
+                <h3 class="plant-name">${plant.name}</h3>
+                <div class="plant-actions">
+                    <button class="btn btn-secondary" onclick="editPlant('${plant.id}')">
+                        <i class="fas fa-edit"></i> Редагувати
+                    </button>
+                    <button class="btn btn-danger" onclick="deletePlant('${plant.id}')">
+                        <i class="fas fa-trash"></i> Видалити
+                    </button>
+                </div>
+            </div>
             <div class="plant-info">
-                <div class="plant-name">${plant.name}</div>
-                <div class="plant-category">${plant.categoryName} • ${plant.price} грн</div>
+                <div class="info-item">
+                    <span class="info-label">Категорія</span>
+                    <span class="info-value">${categoryNames[plant.category] || plant.category}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ціна</span>
+                    <span class="info-value">${plant.price} грн</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Зображення</span>
+                    <span class="info-value">${plant.image || '🌿'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Viber</span>
+                    <span class="info-value">${plant.viber || 'Не вказано'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Telegram</span>
+                    <span class="info-value">${plant.telegram || 'Не вказано'}</span>
+                </div>
             </div>
-            <div class="plant-actions">
-                <button class="action-btn edit-btn" onclick="editPlant(${plant.id})">
-                    <i class="fas fa-edit"></i> Редагувати
-                </button>
-                <button class="action-btn delete-btn" onclick="deletePlant(${plant.id})">
-                    <i class="fas fa-trash"></i> Видалити
-                </button>
-            </div>
-        </div>
-    `).join('');
+            ${plant.description ? `
+                <div class="info-item">
+                    <span class="info-label">Опис</span>
+                    <span class="info-value">${plant.description}</span>
+                </div>
+            ` : ''}
+            ${plant.care ? `
+                <div class="info-item">
+                    <span class="info-label">Догляд</span>
+                    <span class="info-value">${plant.care}</span>
+                </div>
+            ` : ''}
+        `;
+        
+        plantsList.appendChild(plantItem);
+    });
 }
 
 // Редагування рослини
@@ -140,214 +153,156 @@ function editPlant(plantId) {
     const plant = plantsData.find(p => p.id === plantId);
     if (!plant) return;
 
-    // Заповнення форми даними рослини
-    document.getElementById('plantName').value = plant.name;
-    document.getElementById('plantCategory').value = plant.category;
-    document.getElementById('plantPrice').value = plant.price;
-    document.getElementById('plantImage').value = plant.image;
-    document.getElementById('plantDescription').value = plant.description;
-    document.getElementById('careLighting').value = plant.care.lighting;
-    document.getElementById('careWatering').value = plant.care.watering;
-    document.getElementById('careTemperature').value = plant.care.temperature;
-    document.getElementById('careHumidity').value = plant.care.humidity;
-    document.getElementById('contactViber').value = plant.viber;
-    document.getElementById('contactTelegram').value = plant.telegram;
-
-    // Зміна тексту кнопки
-    const submitBtn = document.querySelector('.submit-btn');
-    submitBtn.innerHTML = '<i class="fas fa-save"></i> Зберегти зміни';
-    submitBtn.dataset.editId = plantId;
-
-    // Переключення на форму
-    switchSection('add');
+    editingPlantId = plantId;
     
-    // Прокрутка до форми
-    document.getElementById('addSection').scrollIntoView({ behavior: 'smooth' });
+    // Заповнити форму даними рослини
+    document.getElementById('plantName').value = plant.name || '';
+    document.getElementById('plantCategory').value = plant.category || '';
+    document.getElementById('plantPrice').value = plant.price || '';
+    document.getElementById('plantImage').value = plant.image || '';
+    document.getElementById('plantDescription').value = plant.description || '';
+    document.getElementById('plantCare').value = plant.care || '';
+    document.getElementById('plantViber').value = plant.viber || '';
+    document.getElementById('plantTelegram').value = plant.telegram || '';
+    
+    // Змінити текст кнопки
+    const submitBtn = addPlantForm.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Зберегти зміни';
+    
+    // Перейти до секції додавання
+    showSection('add');
+    
+    // Прокрутити до форми
+    document.getElementById('add-section').scrollIntoView({ behavior: 'smooth' });
 }
 
 // Видалення рослини
-function deletePlant(plantId) {
+async function deletePlant(plantId) {
     if (!confirm('Ви впевнені, що хочете видалити цю рослину?')) {
         return;
     }
 
-    const plantIndex = plantsData.findIndex(p => p.id === plantId);
-    if (plantIndex === -1) return;
-
-    const plantName = plantsData[plantIndex].name;
-    plantsData.splice(plantIndex, 1);
-    savePlantsToStorage();
-    renderPlantsList();
-    
-    showSuccess(`Рослину "${plantName}" видалено`);
-}
-
-// Збереження рослин у localStorage
-function savePlantsToStorage() {
-    localStorage.setItem('plantsData', JSON.stringify(plantsData));
-    localStorage.setItem('nextId', nextId.toString());
-    
-    // Оновлення даних на головній сторінці
-    updateMainPageData();
-}
-
-// Завантаження рослин з localStorage
-function loadPlantsFromStorage() {
-    const savedPlants = localStorage.getItem('plantsData');
-    const savedNextId = localStorage.getItem('nextId');
-    
-    if (savedPlants) {
-        plantsData = JSON.parse(savedPlants);
-    }
-    
-    if (savedNextId) {
-        nextId = parseInt(savedNextId);
-    } else {
-        // Якщо немає збереженого nextId, встановлюємо його на основі існуючих рослин
-        if (plantsData.length > 0) {
-            nextId = Math.max(...plantsData.map(p => p.id)) + 1;
-        } else {
-            nextId = 1; // Початкове значення
+    const success = await deletePlantFromFirebase(plantId);
+    if (success) {
+        showMessage('Рослину успішно видалено!');
+        // Повідомити головну сторінку про оновлення
+        if (window.opener) {
+            window.opener.postMessage({ type: 'PLANTS_UPDATED' }, '*');
         }
+    } else {
+        showMessage('Помилка при видаленні рослини', 'error');
     }
 }
 
-// Оновлення даних на головній сторінці
-function updateMainPageData() {
-    // Відправка повідомлення на головну сторінку
-    if (window.opener && !window.opener.closed) {
-        window.opener.postMessage({
-            type: 'PLANTS_UPDATED',
-            data: plantsData
-        }, '*');
+// Обробка форми
+addPlantForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(addPlantForm);
+    const plant = {
+        name: formData.get('name'),
+        category: formData.get('category'),
+        price: parseInt(formData.get('price')),
+        image: formData.get('image'),
+        description: formData.get('description'),
+        care: formData.get('care'),
+        viber: formData.get('viber'),
+        telegram: formData.get('telegram')
+    };
+
+    // Додати ID якщо це редагування
+    if (editingPlantId) {
+        plant.id = editingPlantId;
     }
+
+    const success = await savePlantToFirebase(plant);
+    
+    if (success) {
+        showMessage(editingPlantId ? 'Рослину успішно оновлено!' : 'Рослину успішно додано!');
+        addPlantForm.reset();
+        editingPlantId = null;
+        
+        // Повернути оригінальний текст кнопки
+        const submitBtn = addPlantForm.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Додати рослину';
+        
+        // Повідомити головну сторінку про оновлення
+        if (window.opener) {
+            window.opener.postMessage({ type: 'PLANTS_UPDATED' }, '*');
+        }
+    } else {
+        showMessage('Помилка при збереженні рослини', 'error');
+    }
+});
+
+// Перемикання між секціями
+function showSection(sectionName) {
+    // Оновити активні кнопки
+    navBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === sectionName);
+    });
+    
+    // Оновити активні секції
+    adminSections.forEach(section => {
+        section.classList.toggle('active', section.id === `${sectionName}-section`);
+    });
 }
 
-// Показ повідомлення про успіх
-function showSuccess(message) {
-    successText.textContent = message;
-    successMessage.style.display = 'block';
-    errorMessage.style.display = 'none';
-    
-    setTimeout(() => {
-        successMessage.style.display = 'none';
-    }, 3000);
-}
-
-// Показ повідомлення про помилку
-function showError(message) {
-    errorText.textContent = message;
-    errorMessage.style.display = 'block';
-    successMessage.style.display = 'none';
-    
-    setTimeout(() => {
-        errorMessage.style.display = 'none';
-    }, 3000);
-}
+// Обробники кліків по навігації
+navBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        showSection(btn.dataset.section);
+    });
+});
 
 // Експорт даних
-function exportPlants() {
+function exportData() {
     const dataStr = JSON.stringify(plantsData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
     
     const link = document.createElement('a');
-    link.href = url;
-    link.download = 'plants-data.json';
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `plants-data-${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     
-    URL.revokeObjectURL(url);
+    showMessage('Дані експортовано успішно!');
 }
 
 // Імпорт даних
-function importPlants(file) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const importedData = JSON.parse(e.target.result);
-            if (Array.isArray(importedData)) {
-                plantsData = importedData;
-                nextId = Math.max(...plantsData.map(p => p.id), 0) + 1;
-                savePlantsToStorage();
-                renderPlantsList();
-                showSuccess('Дані успішно імпортовано!');
-            } else {
-                showError('Неправильний формат файлу');
-            }
-        } catch (error) {
-            showError('Помилка при імпорті файлу');
-        }
-    };
-    reader.readAsText(file);
-}
+importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-// Додавання кнопок експорту/імпорту
-document.addEventListener('DOMContentLoaded', function() {
-    const adminNav = document.querySelector('.admin-nav');
-    
-    // Кнопка експорту
-    const exportBtn = document.createElement('button');
-    exportBtn.className = 'admin-nav-btn';
-    exportBtn.innerHTML = '<i class="fas fa-download"></i> Експорт';
-    exportBtn.onclick = exportPlants;
-    adminNav.appendChild(exportBtn);
-    
-    // Кнопка імпорту
-    const importBtn = document.createElement('button');
-    importBtn.className = 'admin-nav-btn';
-    importBtn.innerHTML = '<i class="fas fa-upload"></i> Імпорт';
-    importBtn.onclick = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            if (e.target.files[0]) {
-                importPlants(e.target.files[0]);
-            }
-        };
-        input.click();
-    };
-    adminNav.appendChild(importBtn);
+    try {
+        const text = await file.text();
+        const importedData = JSON.parse(text);
+        
+        if (!Array.isArray(importedData)) {
+            throw new Error('Неправильний формат файлу');
+        }
+
+        // Додати кожну рослину в Firebase
+        let successCount = 0;
+        for (const plant of importedData) {
+            // Видалити ID щоб створити нові документи
+            delete plant.id;
+            const success = await savePlantToFirebase(plant);
+            if (success) successCount++;
+        }
+
+        showMessage(`Імпортовано ${successCount} з ${importedData.length} рослин`);
+        
+        // Очистити input
+        importFile.value = '';
+        
+    } catch (error) {
+        console.error('Помилка імпорту:', error);
+        showMessage('Помилка при імпорті файлу', 'error');
+        importFile.value = '';
+    }
 });
 
-// Обробка оновлення форми для редагування
-addPlantForm.addEventListener('submit', function(e) {
-    const submitBtn = document.querySelector('.submit-btn');
-    const editId = submitBtn.dataset.editId;
-    
-    if (editId) {
-        e.preventDefault();
-        
-        // Оновлення існуючої рослини
-        const plantIndex = plantsData.findIndex(p => p.id === parseInt(editId));
-        if (plantIndex === -1) return;
-        
-        plantsData[plantIndex] = {
-            id: parseInt(editId),
-            name: document.getElementById('plantName').value,
-            category: document.getElementById('plantCategory').value,
-            categoryName: getCategoryName(document.getElementById('plantCategory').value),
-            price: parseInt(document.getElementById('plantPrice').value),
-            image: document.getElementById('plantImage').value || '🌿',
-            description: document.getElementById('plantDescription').value,
-            care: {
-                lighting: document.getElementById('careLighting').value || 'Розсіяне світло',
-                watering: document.getElementById('careWatering').value || 'Помірний полив',
-                temperature: document.getElementById('careTemperature').value || '18-25°C',
-                humidity: document.getElementById('careHumidity').value || 'Середня'
-            },
-            viber: document.getElementById('contactViber').value || '+380501234567',
-            telegram: document.getElementById('contactTelegram').value || '@plantshop_ua'
-        };
-        
-        savePlantsToStorage();
-        addPlantForm.reset();
-        
-        // Скидання режиму редагування
-        submitBtn.innerHTML = '<i class="fas fa-plus"></i> Додати рослину';
-        delete submitBtn.dataset.editId;
-        
-        showSuccess('Рослину успішно оновлено!');
-        renderPlantsList();
-    }
+// Ініціалізація при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', () => {
+    loadPlantsFromFirebase();
 }); 
