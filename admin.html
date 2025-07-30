@@ -203,10 +203,17 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+            transition: all 0.3s ease;
         }
         
-        .image-upload-container input[type="text"] {
-            flex: 1;
+        .image-upload-container:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
         }
         
         .image-preview {
@@ -273,11 +280,11 @@
                 <div class="form-group">
                     <label for="plantImage">Зображення</label>
                     <div class="image-upload-container">
-                        <input type="text" id="plantImage" name="image" placeholder="🌿 або https://example.com/image.jpg">
                         <label for="imageFile" class="file-label">
                             <i class="fas fa-camera"></i> Завантажити фото
                         </label>
                         <input type="file" id="imageFile" class="file-input" accept="image/*" style="display: none;">
+                        <input type="hidden" id="plantImage" name="image">
                     </div>
                     <div id="imagePreview" class="image-preview" style="display: none;">
                         <img id="previewImg" src="" alt="Попередній перегляд">
@@ -297,15 +304,7 @@
                     <textarea id="plantCare" name="care" placeholder="Інформація про догляд за рослиною..."></textarea>
                 </div>
                 
-                <div class="form-group">
-                    <label for="plantViber">Viber</label>
-                    <input type="text" id="plantViber" name="viber" placeholder="+380123456789">
-                </div>
-                
-                <div class="form-group">
-                    <label for="plantTelegram">Telegram</label>
-                    <input type="text" id="plantTelegram" name="telegram" placeholder="@username">
-                </div>
+
                 
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Додати рослину

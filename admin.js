@@ -170,8 +170,6 @@ function editPlant(plantId) {
     document.getElementById('plantImage').value = plant.image || '';
     document.getElementById('plantDescription').value = plant.description || '';
     document.getElementById('plantCare').value = plant.care || '';
-    document.getElementById('plantViber').value = FIXED_VIBER;
-    document.getElementById('plantTelegram').value = FIXED_TELEGRAM;
     
     // Показати попередній перегляд зображення якщо воно є
     if (plant.image && plant.image.startsWith('data:image')) {
@@ -328,6 +326,10 @@ function handleImageUpload(event) {
             document.getElementById('plantImage').value = imageData;
             previewImg.src = imageData;
             imagePreview.style.display = 'block';
+            showMessage('Фото успішно завантажено!', 'success');
+        };
+        reader.onerror = function() {
+            showMessage('Помилка при завантаженні фото', 'error');
         };
         reader.readAsDataURL(file);
     }
@@ -337,6 +339,7 @@ function removeImagePreview() {
     document.getElementById('plantImage').value = '';
     imagePreview.style.display = 'none';
     imageFile.value = '';
+    showMessage('Фото видалено', 'success');
 }
 
 // Ініціалізація при завантаженні сторінки
@@ -347,9 +350,5 @@ document.addEventListener('DOMContentLoaded', () => {
     imageFile.addEventListener('change', handleImageUpload);
     removeImage.addEventListener('click', removeImagePreview);
     
-    // Встановлюємо фіксовані контакти
-    document.getElementById('plantViber').value = FIXED_VIBER;
-    document.getElementById('plantTelegram').value = FIXED_TELEGRAM;
-    document.getElementById('plantViber').readOnly = true;
-    document.getElementById('plantTelegram').readOnly = true;
+
 }); 
