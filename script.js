@@ -4,22 +4,36 @@ let filteredPlants = [];
 let cart = [];
 
 // DOM елементи
-const plantsGrid = document.getElementById('plantsGrid');
-const searchInput = document.getElementById('searchInput');
-const searchOverlay = document.getElementById('searchOverlay');
-const searchBtn = document.getElementById('searchBtn');
-const closeSearch = document.getElementById('closeSearch');
-const plantModal = document.getElementById('plantModal');
-const closeModal = document.getElementById('closeModal');
-const plantDetails = document.getElementById('plantDetails');
-const cartCount = document.getElementById('cartCount');
-const categoryBtns = document.querySelectorAll('.category-btn');
-const tabBtns = document.querySelectorAll('.tab-btn');
-const adminBtn = document.getElementById('adminBtn');
+let plantsGrid, searchInput, searchOverlay, searchBtn, closeSearch;
+let plantModal, closeModal, plantDetails, cartCount;
+let categoryBtns, tabBtns, adminBtn;
+
+// Ініціалізація DOM елементів
+function initializeDOMElements() {
+    plantsGrid = document.getElementById('plantsGrid');
+    searchInput = document.getElementById('searchInput');
+    searchOverlay = document.getElementById('searchOverlay');
+    searchBtn = document.getElementById('searchBtn');
+    closeSearch = document.getElementById('closeSearch');
+    plantModal = document.getElementById('plantModal');
+    closeModal = document.getElementById('closeModal');
+    plantDetails = document.getElementById('plantDetails');
+    cartCount = document.getElementById('cartCount');
+    categoryBtns = document.querySelectorAll('.category-btn');
+    tabBtns = document.querySelectorAll('.tab-btn');
+    adminBtn = document.getElementById('adminBtn');
+}
 
 // Завантаження рослин з Firebase
 async function loadPlantsFromFirebase() {
     try {
+        // Перевіряємо, чи Firebase ініціалізований
+        if (typeof db === 'undefined') {
+            console.log('Firebase не ініціалізований, використовуємо localStorage');
+            loadPlantsFromStorage();
+            return;
+        }
+
         const snapshot = await db.collection('plants').get();
         plantsData = [];
         snapshot.forEach(doc => {
@@ -30,7 +44,6 @@ async function loadPlantsFromFirebase() {
         renderPlants();
     } catch (error) {
         console.error('Помилка завантаження рослин:', error);
-        // Fallback до localStorage якщо Firebase недоступний
         loadPlantsFromStorage();
     }
 }
@@ -45,45 +58,14 @@ function loadPlantsFromStorage() {
     renderPlants();
 }
 
-// Збереження рослини в Firebase
-async function savePlantToFirebase(plant) {
-    try {
-        if (plant.id) {
-            // Оновлення існуючої рослини
-            await db.collection('plants').doc(plant.id).update(plant);
-        } else {
-            // Додавання нової рослини
-            const docRef = await db.collection('plants').add(plant);
-            plant.id = docRef.id;
-        }
-        await loadPlantsFromFirebase(); // Перезавантажити дані
-        return true;
-    } catch (error) {
-        console.error('Помилка збереження рослини:', error);
-        return false;
-    }
-}
-
-// Видалення рослини з Firebase
-async function deletePlantFromFirebase(plantId) {
-    try {
-        await db.collection('plants').doc(plantId).delete();
-        await loadPlantsFromFirebase(); // Перезавантажити дані
-        return true;
-    } catch (error) {
-        console.error('Помилка видалення рослини:', error);
-        return false;
-    }
-}
-
 // Відображення рослин
 function renderPlants() {
+    if (!plantsGrid) return;
+    
     plantsGrid.innerHTML = '';
 
     if (filteredPlants.length === 0) {
-        // Перевіряємо, чи це результат фільтрації чи просто немає рослин
         if (plantsData.length === 0) {
-            // Немає рослин взагалі
             plantsGrid.innerHTML = `
                 <div class="no-results">
                     <i class="fas fa-seedling" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
@@ -95,7 +77,6 @@ function renderPlants() {
                 </div>
             `;
         } else {
-            // Результат фільтрації
             plantsGrid.innerHTML = `
                 <div class="no-results">
                     <i class="fas fa-search" style="font-size: 3rem; color: #ccc; margin-bottom: 20px;"></i>
@@ -127,6 +108,8 @@ function renderPlants() {
 
 // Показ деталей рослини
 function showPlantDetails(plant) {
+    if (!plantDetails || !plantModal) return;
+
     const categoryNames = {
         'indoor': 'Кімнатні',
         'garden': 'Садові',
@@ -153,7 +136,7 @@ function showPlantDetails(plant) {
                 <button class="contact-btn telegram-btn" onclick="contactTelegram('${plant.telegram || '@plantshop'}')">
                     <i class="fab fa-telegram"></i> Telegram
                 </button>
-                <button class="add-to-cart-btn" onclick="addToCart(${plant.id})">
+                <button class="add-to-cart-btn" onclick="addToCart('${plant.id}')">
                     <i class="fas fa-shopping-cart"></i> Додати в кошик
                 </button>
             </div>
@@ -196,13 +179,12 @@ function addToCart(plantId) {
     
     updateCartDisplay();
     saveCartToStorage();
-    
-    // Показати повідомлення про успіх
     showNotification('Рослину додано в кошик!');
 }
 
 // Оновлення відображення кошика
 function updateCartDisplay() {
+    if (!cartCount) return;
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.textContent = totalItems;
 }
@@ -226,6 +208,17 @@ function showNotification(message) {
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        z-index: 5000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
     document.body.appendChild(notification);
     
     setTimeout(() => {
@@ -248,70 +241,101 @@ function searchPlants(query) {
     const lowerQuery = query.toLowerCase();
     filteredPlants = plantsData.filter(plant => 
         plant.name.toLowerCase().includes(lowerQuery) ||
-        plant.description.toLowerCase().includes(lowerQuery)
+        (plant.description && plant.description.toLowerCase().includes(lowerQuery))
     );
     renderPlants();
 }
 
-// Обробники подій
-searchBtn.addEventListener('click', () => {
-    searchOverlay.classList.add('active');
-    searchInput.focus();
-});
-
-closeSearch.addEventListener('click', () => {
-    searchOverlay.classList.remove('active');
-    searchInput.value = '';
-    filteredPlants = [...plantsData];
-    renderPlants();
-});
-
-searchInput.addEventListener('input', (e) => {
-    searchPlants(e.target.value);
-});
-
-closeModal.addEventListener('click', () => {
-    plantModal.classList.remove('active');
-});
-
-plantModal.addEventListener('click', (e) => {
-    if (e.target === plantModal) {
-        plantModal.classList.remove('active');
+// Налаштування обробників подій
+function setupEventListeners() {
+    // Пошук
+    if (searchBtn) {
+        searchBtn.addEventListener('click', () => {
+            if (searchOverlay) {
+                searchOverlay.classList.add('active');
+                if (searchInput) searchInput.focus();
+            }
+        });
     }
-});
 
-categoryBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        categoryBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        filterByCategory(btn.dataset.category);
-    });
-});
+    if (closeSearch) {
+        closeSearch.addEventListener('click', () => {
+            if (searchOverlay) {
+                searchOverlay.classList.remove('active');
+                if (searchInput) {
+                    searchInput.value = '';
+                    filteredPlants = [...plantsData];
+                    renderPlants();
+                }
+            }
+        });
+    }
 
-tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        const tab = btn.dataset.tab;
-        if (tab === 'cart') {
-            showCart();
-        } else if (tab === 'categories') {
-            // Показати категорії (вже показані)
-        } else if (tab === 'home') {
-            // Повернутися до головної
-            filteredPlants = [...plantsData];
-            renderPlants();
-        }
-    });
-});
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchPlants(e.target.value);
+        });
+    }
 
-adminBtn.addEventListener('click', () => {
-    window.open('admin.html', '_blank');
-});
+    // Модальне вікно
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            if (plantModal) plantModal.classList.remove('active');
+        });
+    }
+
+    if (plantModal) {
+        plantModal.addEventListener('click', (e) => {
+            if (e.target === plantModal) {
+                plantModal.classList.remove('active');
+            }
+        });
+    }
+
+    // Категорії
+    if (categoryBtns) {
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filterByCategory(btn.dataset.category);
+            });
+        });
+    }
+
+    // Тап-бар
+    if (tabBtns) {
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const tab = btn.dataset.tab;
+                if (tab === 'cart') {
+                    showCart();
+                } else if (tab === 'categories') {
+                    // Показати категорії (вже показані)
+                } else if (tab === 'home') {
+                    // Повернутися до головної
+                    filteredPlants = [...plantsData];
+                    renderPlants();
+                }
+            });
+        });
+    }
+
+    // Адмін-панель
+    if (adminBtn) {
+        adminBtn.addEventListener('click', () => {
+            window.open('admin.html', '_blank');
+        });
+    }
+}
 
 // Показ кошика
 function showCart() {
+    if (!plantsGrid) return;
+
     if (cart.length === 0) {
         plantsGrid.innerHTML = `
             <div class="no-results">
@@ -337,14 +361,14 @@ function showCart() {
                 <p>${item.price} грн</p>
             </div>
             <div class="cart-item-quantity">
-                <button onclick="updateQuantity(${item.id}, -1)">-</button>
+                <button onclick="updateQuantity('${item.id}', -1)">-</button>
                 <span>${item.quantity}</span>
-                <button onclick="updateQuantity(${item.id}, 1)">+</button>
+                <button onclick="updateQuantity('${item.id}', 1)">+</button>
             </div>
             <div class="cart-item-total">
                 ${item.price * item.quantity} грн
             </div>
-            <button class="remove-item" onclick="removeFromCart(${item.id})">
+            <button class="remove-item" onclick="removeFromCart('${item.id}')">
                 <i class="fas fa-trash"></i>
             </button>
         `;
@@ -373,7 +397,7 @@ function updateQuantity(plantId, change) {
         } else {
             updateCartDisplay();
             saveCartToStorage();
-            showCart(); // Оновити відображення кошика
+            showCart();
         }
     }
 }
@@ -405,6 +429,8 @@ window.addEventListener('message', (event) => {
 
 // Ініціалізація при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
+    initializeDOMElements();
+    setupEventListeners();
     loadPlantsFromFirebase();
     loadCartFromStorage();
 }); 
