@@ -100,10 +100,10 @@ function renderPlantsList() {
             <div class="plant-header">
                 <h3 class="plant-name">${plant.name}</h3>
                 <div class="plant-actions">
-                    <button class="btn btn-secondary" onclick="editPlant('${plant.id}')">
+                    <button class="btn btn-secondary" onclick="editPlant('" + plant.id + "')">
                         <i class="fas fa-edit"></i> Редагувати
                     </button>
-                    <button class="btn btn-danger" onclick="deletePlant('${plant.id}')">
+                    <button class="btn btn-danger" onclick="deletePlant('" + plant.id + "')">
                         <i class="fas fa-trash"></i> Видалити
                     </button>
                 </div>
