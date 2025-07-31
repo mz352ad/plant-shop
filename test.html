@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест завантаження</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .status { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>Тест завантаження файлів</h1>
+    <div id="results"></div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+
+        // Тест завантаження CSS
+        const cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = 'styles.css?v=1.1';
+        cssLink.onload = () => addResult('✅ CSS файл завантажено успішно', 'success');
+        cssLink.onerror = () => addResult('❌ Помилка завантаження CSS файлу', 'error');
+        document.head.appendChild(cssLink);
+
+        // Тест завантаження Firebase
+        const firebaseScript = document.createElement('script');
+        firebaseScript.src = 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js';
+        firebaseScript.onload = () => {
+            addResult('✅ Firebase App завантажено', 'success');
+            
+            const firestoreScript = document.createElement('script');
+            firestoreScript.src = 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js';
+            firestoreScript.onload = () => {
+                addResult('✅ Firebase Firestore завантажено', 'success');
+                
+                const configScript = document.createElement('script');
+                configScript.src = 'firebase-config.js?v=1.1';
+                configScript.onload = () => {
+                    addResult('✅ Firebase конфігурація завантажена', 'success');
+                    
+                    // Тест ініціалізації Firebase
+                    setTimeout(() => {
+                        if (typeof db !== 'undefined') {
+                            addResult('✅ Firebase db доступний', 'success');
+                        } else {
+                            addResult('❌ Firebase db недоступний', 'error');
+                        }
+                    }, 1000);
+                };
+                configScript.onerror = () => addResult('❌ Помилка завантаження Firebase конфігурації', 'error');
+                document.head.appendChild(configScript);
+            };
+            firestoreScript.onerror = () => addResult('❌ Помилка завантаження Firebase Firestore', 'error');
+            document.head.appendChild(firestoreScript);
+        };
+        firebaseScript.onerror = () => addResult('❌ Помилка завантаження Firebase App', 'error');
+        document.head.appendChild(firebaseScript);
+
+        // Тест завантаження основного скрипту
+        const mainScript = document.createElement('script');
+        mainScript.src = 'script.js?v=1.1';
+        mainScript.onload = () => addResult('✅ Основний скрипт завантажено', 'success');
+        mainScript.onerror = () => addResult('❌ Помилка завантаження основного скрипту', 'error');
+        document.head.appendChild(mainScript);
+
+        // Інформація про середовище
+        addResult(`🌐 URL: ${window.location.href}`, 'info');
+        addResult(`📱 User Agent: ${navigator.userAgent}`, 'info');
+        addResult(`⏰ Час: ${new Date().toLocaleString('uk-UA')}`, 'info');
+    </script>
+</body>
+</html> 

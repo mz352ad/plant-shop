@@ -3,6 +3,11 @@ let plantsData = [];
 let filteredPlants = [];
 let cart = [];
 
+// Логування для діагностики
+console.log('Script.js завантажений');
+console.log('Поточний URL:', window.location.href);
+console.log('User Agent:', navigator.userAgent);
+
 // DOM елементи
 let plantsGrid, searchInput, searchOverlay, searchBtn, closeSearch;
 let plantModal, closeModal, plantDetails, cartCount;
@@ -27,6 +32,10 @@ function initializeDOMElements() {
 // Завантаження рослин з Firebase
 async function loadPlantsFromFirebase() {
     try {
+        console.log('Спроба завантаження з Firebase...');
+        console.log('db доступний:', typeof db !== 'undefined');
+        console.log('firebase доступний:', typeof firebase !== 'undefined');
+        
         // Перевіряємо, чи Firebase ініціалізований
         if (typeof db === 'undefined') {
             console.log('Firebase не ініціалізований, використовуємо localStorage');
@@ -493,8 +502,13 @@ window.addEventListener('message', (event) => {
 
 // Ініціалізація при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM завантажений, починаємо ініціалізацію...');
     initializeDOMElements();
     setupEventListeners();
     loadPlantsFromFirebase();
     loadCartFromStorage();
-}); 
+    console.log('Ініціалізація завершена');
+});
+
+// Додаткове логування для діагностики
+console.log('Script.js повністю завантажений'); 
