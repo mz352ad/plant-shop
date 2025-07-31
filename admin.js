@@ -21,16 +21,23 @@ const FIXED_TELEGRAM = '+380966970439';
 // Завантаження рослин з Firebase
 async function loadPlantsFromFirebase() {
     try {
+        console.log('Loading plants from Firebase...');
+        if (!db) {
+            console.error('Firebase db is not initialized');
+            showMessage('Помилка: Firebase не ініціалізований', 'error');
+            return;
+        }
         const snapshot = await db.collection('plants').get();
         plantsData = [];
         snapshot.forEach(doc => {
             const plant = { id: doc.id, ...doc.data() };
             plantsData.push(plant);
         });
+        console.log('Plants loaded successfully:', plantsData);
         renderPlantsList();
     } catch (error) {
         console.error('Помилка завантаження рослин:', error);
-        showMessage('Помилка завантаження рослин', 'error');
+        showMessage('Помилка завантаження рослин: ' + error.message, 'error');
     }
 }
 
@@ -81,6 +88,7 @@ function showMessage(message, type = 'success') {
 
 // Відображення списку рослин
 function renderPlantsList() {
+    console.log('renderPlantsList called, plantsData:', plantsData);
     if (plantsData.length === 0) {
         plantsList.innerHTML = `
             <div class="no-results">
@@ -108,10 +116,10 @@ function renderPlantsList() {
             <div class="plant-header">
                 <h3 class="plant-name">${plant.name}</h3>
                 <div class="plant-actions">
-                    <button class="btn btn-secondary" onclick="editPlant('" + plant.id + "')">
+                    <button class="btn btn-secondary" onclick="editPlant('${plant.id}')">
                         <i class="fas fa-edit"></i> Редагувати
                     </button>
-                    <button class="btn btn-danger" onclick="deletePlant('" + plant.id + "')">
+                    <button class="btn btn-danger" onclick="deletePlant('${plant.id}')">
                         <i class="fas fa-trash"></i> Видалити
                     </button>
                 </div>
@@ -123,20 +131,28 @@ function renderPlantsList() {
                 </div>
                 <div class="info-item">
                     <span class="info-label">Ціна</span>
-                    <span class="info-value">${plant.price} грн</span>
+                    <span class="info-value">
+                        ${plant.promoPrice ? 
+                            `<span style="text-decoration: line-through; color: #999;">${plant.price} грн</span><br>
+                             <span style="color: #e91e63; font-weight: bold;">${plant.promoPrice} грн</span>
+                             ${plant.promoEndDate ? `<br><small>до ${new Date(plant.promoEndDate).toLocaleDateString('uk-UA')}</small>` : ''}` 
+                            : `${plant.price} грн`
+                        }
+                    </span>
                 </div>
                 <div class="info-item">
                     <span class="info-label">Зображення</span>
-                    <span class="info-value">${plant.image || '🌿'}</span>
+                    <span class="info-value">
+                        ${plant.image ? 
+                            (plant.image.startsWith('data:image') ? 
+                                `<img src="${plant.image}" alt="Зображення рослини" style="max-width: 100px; max-height: 100px; border-radius: 8px; object-fit: cover; border: 2px solid #e8f5e8;">` : 
+                                plant.image
+                            ) : 
+                            '🌿'
+                        }
+                    </span>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Viber</span>
-                    <span class="info-value">${plant.viber || 'Не вказано'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Telegram</span>
-                    <span class="info-value">${plant.telegram || 'Не вказано'}</span>
-                </div>
+
             </div>
             ${plant.description ? `
                 <div class="info-item">
@@ -144,12 +160,7 @@ function renderPlantsList() {
                     <span class="info-value">${plant.description}</span>
                 </div>
             ` : ''}
-            ${plant.care ? `
-                <div class="info-item">
-                    <span class="info-label">Догляд</span>
-                    <span class="info-value">${plant.care}</span>
-                </div>
-            ` : ''}
+
         `;
         
         plantsList.appendChild(plantItem);
@@ -158,8 +169,12 @@ function renderPlantsList() {
 
 // Редагування рослини
 function editPlant(plantId) {
+    console.log('editPlant called with ID:', plantId);
     const plant = plantsData.find(p => p.id === plantId);
-    if (!plant) return;
+    if (!plant) {
+        console.log('Plant not found with ID:', plantId);
+        return;
+    }
 
     editingPlantId = plantId;
     
@@ -167,9 +182,10 @@ function editPlant(plantId) {
     document.getElementById('plantName').value = plant.name || '';
     document.getElementById('plantCategory').value = plant.category || '';
     document.getElementById('plantPrice').value = plant.price || '';
+    document.getElementById('plantPromoPrice').value = plant.promoPrice || '';
+    document.getElementById('plantPromoEndDate').value = plant.promoEndDate || '';
     document.getElementById('plantImage').value = plant.image || '';
     document.getElementById('plantDescription').value = plant.description || '';
-    document.getElementById('plantCare').value = plant.care || '';
     
     // Показати попередній перегляд зображення якщо воно є
     if (plant.image && plant.image.startsWith('data:image')) {
@@ -192,6 +208,7 @@ function editPlant(plantId) {
 
 // Видалення рослини
 async function deletePlant(plantId) {
+    console.log('deletePlant called with ID:', plantId);
     if (!confirm('Ви впевнені, що хочете видалити цю рослину?')) {
         return;
     }
@@ -217,9 +234,10 @@ addPlantForm.addEventListener('submit', async (e) => {
         name: formData.get('name'),
         category: formData.get('category'),
         price: parseInt(formData.get('price')),
+        promoPrice: formData.get('promoPrice') ? parseInt(formData.get('promoPrice')) : null,
+        promoEndDate: formData.get('promoEndDate') || null,
         image: formData.get('image'),
         description: formData.get('description'),
-        care: formData.get('care'),
         viber: FIXED_VIBER,
         telegram: FIXED_TELEGRAM
     };
@@ -320,6 +338,13 @@ importFile.addEventListener('change', async (e) => {
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
+        // Перевірка розміру файлу (максимум 500KB)
+        const maxSize = 500 * 1024; // 500KB
+        if (file.size > maxSize) {
+            showMessage('Файл занадто великий. Максимальний розмір: 500KB', 'error');
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             const imageData = e.target.result;
@@ -344,11 +369,65 @@ function removeImagePreview() {
 
 // Ініціалізація при завантаженні сторінки
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing admin panel...');
+    
+    // Check if all required elements exist
+    if (!addPlantForm) console.error('addPlantForm not found');
+    if (!plantsList) console.error('plantsList not found');
+    if (!messageContainer) console.error('messageContainer not found');
+    if (!imageFile) console.error('imageFile not found');
+    if (!imagePreview) console.error('imagePreview not found');
+    if (!previewImg) console.error('previewImg not found');
+    if (!removeImage) console.error('removeImage not found');
+    
+    // Expose functions to global scope
+    window.editPlant = editPlant;
+    window.deletePlant = deletePlant;
+    window.exportData = exportData;
+    
+    console.log('Functions exposed to global scope:', {
+        editPlant: typeof window.editPlant,
+        deletePlant: typeof window.deletePlant,
+        exportData: typeof window.exportData
+    });
+    
     loadPlantsFromFirebase();
     
     // Обробники для завантаження фото
     imageFile.addEventListener('change', handleImageUpload);
     removeImage.addEventListener('click', removeImagePreview);
     
-
+    // Drag and drop функціональність
+    const uploadContainer = document.getElementById('uploadContainer');
+    
+    uploadContainer.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.add('dragover');
+    });
+    
+    uploadContainer.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.remove('dragover');
+    });
+    
+    uploadContainer.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadContainer.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type.startsWith('image/')) {
+                imageFile.files = files;
+                handleImageUpload({ target: { files: [file] } });
+            } else {
+                showMessage('Будь ласка, виберіть файл зображення', 'error');
+            }
+        }
+    });
+    
+    // Клік по контейнеру для вибору файлу
+    uploadContainer.addEventListener('click', () => {
+        imageFile.click();
+    });
 }); 

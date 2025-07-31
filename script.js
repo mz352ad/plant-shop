@@ -91,13 +91,26 @@ function renderPlants() {
     filteredPlants.forEach(plant => {
         const plantCard = document.createElement('div');
         plantCard.className = 'plant-card';
+        
+        // Визначаємо, чи це зображення або емодзі
+        const isImage = plant.image && plant.image.startsWith('data:image');
+        
         plantCard.innerHTML = `
             <div class="plant-image">
-                <span class="plant-emoji">${plant.image || '🌿'}</span>
+                ${isImage ? 
+                    `<img src="${plant.image}" alt="${plant.name}" class="plant-img">` : 
+                    `<span class="plant-emoji">${plant.image || '🌿'}</span>`
+                }
             </div>
             <div class="plant-info">
                 <h3 class="plant-name">${plant.name}</h3>
-                <p class="plant-price">${plant.price} грн</p>
+                <p class="plant-price">
+                    ${plant.promoPrice ? 
+                        `<span style="text-decoration: line-through; color: #999; font-size: 0.9em;">${plant.price} грн</span><br>
+                         <span style="color: #e91e63; font-weight: bold;">${plant.promoPrice} грн</span>` 
+                        : `${plant.price} грн`
+                    }
+                </p>
             </div>
         `;
         
@@ -116,29 +129,67 @@ function showPlantDetails(plant) {
         'exotic': 'Екзотичні'
     };
 
+    // Визначаємо, чи це зображення або емодзі
+    const isImage = plant.image && plant.image.startsWith('data:image');
+    
     plantDetails.innerHTML = `
         <div class="plant-detail-image">
-            <span class="plant-emoji-large">${plant.image || '🌿'}</span>
+            ${isImage ? 
+                `<img src="${plant.image}" alt="${plant.name}" class="plant-detail-img">` : 
+                `<span class="plant-emoji-large">${plant.image || '🌿'}</span>`
+            }
         </div>
         <div class="plant-detail-info">
-            <h2>${plant.name}</h2>
-            <p class="plant-category">${categoryNames[plant.category] || plant.category}</p>
-            <p class="plant-price-large">${plant.price} грн</p>
-            <p class="plant-description">${plant.description || 'Опис рослини'}</p>
-            <div class="plant-care">
-                <h4>Догляд:</h4>
-                <p>${plant.care || 'Інформація про догляд'}</p>
+            <div class="product-header">
+                <div class="availability">
+                    <i class="fas fa-check-circle"></i>
+                    <span>В наявності</span>
+                </div>
+                <div class="article-number">
+                    Артикул: ${plant.id ? plant.id.substring(0, 4) : '0000'}
+                </div>
             </div>
-            <div class="plant-actions">
-                <button class="contact-btn viber-btn" onclick="contactViber('+380966970439')">
-                    <i class="fab fa-viber"></i> Viber
-                </button>
-                <button class="contact-btn telegram-btn" onclick="contactTelegram('+380966970439')">
-                    <i class="fab fa-telegram"></i> Telegram
-                </button>
-                <button class="add-to-cart-btn" onclick="addToCart('" + plant.id + "')">
-                    <i class="fas fa-shopping-cart"></i> Додати в кошик
-                </button>
+            
+            <h2 class="plant-detail-name">${plant.name}</h2>
+            <p class="plant-category">${categoryNames[plant.category] || plant.category}</p>
+            
+            <div class="pricing-section">
+                ${plant.promoPrice ? `
+                    <div class="price-promo">
+                        <span class="price-main">${plant.promoPrice} ₴</span>
+                        <span class="price-period">акційна ціна</span>
+                    </div>
+                    <div class="price-regular">
+                        <span class="price-old">${plant.price} ₴</span>
+                        <span class="price-period">${plant.promoEndDate ? `до ${new Date(plant.promoEndDate).toLocaleDateString('uk-UA')}` : 'звичайна ціна'}</span>
+                    </div>
+                ` : `
+                    <div class="price-promo">
+                        <span class="price-main">${plant.price} ₴</span>
+                        <span class="price-period">звичайна ціна</span>
+                    </div>
+                `}
+            </div>
+            
+            <button class="add-to-cart-btn" onclick="addToCart('${plant.id}')">
+                <i class="fas fa-shopping-cart"></i> До кошику
+            </button>
+            
+            <div class="quick-order-section">
+                <h4>Швидке замовлення <i class="fas fa-info-circle"></i></h4>
+                <div class="contact-icons">
+                    <button class="contact-icon-btn viber-icon" onclick="contactViber('+380966970439')">
+                        <i class="fab fa-viber"></i>
+                    </button>
+                    <button class="contact-icon-btn telegram-icon" onclick="contactTelegram('+380966970439')">
+                        <i class="fab fa-telegram"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="product-description">
+                <h4>Опис:</h4>
+                <p>${plant.description || 'Опис рослини'}</p>
             </div>
         </div>
     `;
@@ -153,9 +204,8 @@ function contactViber(phone) {
 
 // Контакт через Telegram
 function contactTelegram(phone) {
-    // Видаляємо + з номера для Telegram
-    const cleanPhone = phone.replace('+', '');
-    window.open('https://t.me/' + cleanPhone, '_blank');
+    // Зберігаємо + для правильного формату Telegram URL
+    window.open('https://t.me/' + phone, '_blank');
 }
 
 // Додавання в кошик
@@ -170,7 +220,9 @@ function addToCart(plantId) {
         cart.push({
             id: plant.id,
             name: plant.name,
-            price: plant.price,
+            price: plant.promoPrice || plant.price,
+            originalPrice: plant.price,
+            promoPrice: plant.promoPrice,
             image: plant.image,
             quantity: 1
         });
@@ -211,7 +263,7 @@ function showNotification(message) {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: #4CAF50;
+        background: #2e7d32;
         color: white;
         padding: 15px 20px;
         border-radius: 10px;
@@ -351,25 +403,38 @@ function showCart() {
     cart.forEach(item => {
         const cartItem = document.createElement('div');
         cartItem.className = 'cart-item';
+        
+        // Визначаємо, чи це зображення або емодзі
+        const isImage = item.image && item.image.startsWith('data:image');
+        
         cartItem.innerHTML = `
             <div class="cart-item-image">
-                <span class="plant-emoji">${item.image || '🌿'}</span>
+                ${isImage ? 
+                    `<img src="${item.image}" alt="${item.name}" class="cart-item-img">` : 
+                    `<span class="plant-emoji">${item.image || '🌿'}</span>`
+                }
             </div>
             <div class="cart-item-info">
                 <h3>${item.name}</h3>
-                <p>${item.price} грн</p>
+                <p>
+                    ${item.promoPrice ? 
+                        `<span style="text-decoration: line-through; color: #999;">${item.originalPrice} грн</span><br>
+                         <span style="color: #e91e63; font-weight: bold;">${item.price} грн</span>` 
+                        : `${item.price} грн`
+                    }
+                </p>
             </div>
             <div class="cart-item-quantity">
-                <button onclick="updateQuantity('" + item.id + "', -1)">-</button>
-                <span>" + item.quantity + "</span>
-                <button onclick="updateQuantity('" + item.id + "', 1)">+</button>
+                <button onclick="updateQuantity('${item.id}', -1)">-</button>
+                <span>${item.quantity}</span>
+                <button onclick="updateQuantity('${item.id}', 1)">+</button>
             </div>
             <div class="cart-item-total">
                 ${item.price * item.quantity} грн
             </div>
-                            <button class="remove-item" onclick="removeFromCart('" + item.id + "')">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <button class="remove-item" onclick="removeFromCart('${item.id}')">
+                <i class="fas fa-trash"></i>
+            </button>
         `;
         plantsGrid.appendChild(cartItem);
     });
