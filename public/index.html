@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Inna-Flowers — каталог рослин</title>
+    <meta name="description" content="Каталог рослин Inna-Flowers: кімнатні, садові та інші рослини. Пошук, фільтри, кошик і швидке замовлення через месенджери.">
+
+    <link rel="stylesheet" href="./src/css/main.css?v=1.4">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Хедер -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo" role="button" tabindex="0" id="logoHome" title="На головну">
+                <i class="fas fa-seedling"></i>
+                <span>Inna-Flowers</span>
+            </div>
+
+            <!-- Пошук для десктопа -->
+            <div class="header-search" aria-label="Пошук">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInputDesktop" placeholder="Пошук у каталозі..." autocomplete="off">
+            </div>
+
+            <div class="header-actions">
+                <!-- Пошук для мобільних (відкриває оверлей) -->
+                <button class="search-btn mobile-only" id="searchBtn" aria-label="Пошук">
+                    <i class="fas fa-search"></i>
+                </button>
+
+                <button class="cart-btn" id="cartBtn" aria-label="Кошик">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cartCountHeader">0</span>
+                </button>
+
+                <!-- Адмін-кнопку прибрано з інтерфейсу (адмінка доступна лише за прямим посиланням) -->
+
+                <button class="menu-btn" id="menuBtn" aria-label="Меню">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Пошук (оверлей, мобільний) -->
+    <div class="search-overlay" id="searchOverlay" aria-hidden="true">
+        <div class="search-container">
+            <input type="text" placeholder="Пошук рослин..." id="searchInput" autocomplete="off">
+            <button class="close-search" id="closeSearch" aria-label="Закрити пошук">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Основний контент -->
+    <main class="main-content">
+        <section class="hero">
+            <h1>Каталог рослин</h1>
+            <p>Фільтруйте, сортуйте, відкривайте деталі та додавайте у кошик.</p>
+        </section>
+
+        <!-- Категорії (генеруються динамічно) -->
+        <section class="categories">
+            <div class="categories-container" id="categoriesContainer"></div>
+        </section>
+
+        <!-- Панель інструментів -->
+        <section class="toolbar">
+            <div class="toolbar-left">
+                <span class="results-count" id="resultsCount">0 товарів</span>
+            </div>
+            <div class="toolbar-right">
+                <label class="visually-hidden" for="sortSelect">Сортування</label>
+                <select id="sortSelect" class="sort-select">
+                    <option value="default">Сортування: за замовчуванням</option>
+                    <option value="price-asc">Ціна: зростання</option>
+                    <option value="price-desc">Ціна: спадання</option>
+                    <option value="name-asc">Назва: А—Я</option>
+                    <option value="name-desc">Назва: Я—А</option>
+                </select>
+                <button class="btn-ghost" id="clearFiltersBtn" type="button">
+                    <i class="fas fa-rotate-left"></i> Скинути
+                </button>
+            </div>
+        </section>
+
+        <!-- Каталог -->
+        <section class="plants-catalog">
+            <div class="plants-grid" id="plantsGrid">
+                <!-- Рослини будуть додаватися через JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Модальне вікно для деталей рослини -->
+    <div class="modal-overlay" id="plantModal" aria-hidden="true">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal" aria-label="Закрити">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="plant-details" id="plantDetails"></div>
+        </div>
+    </div>
+
+    <!-- Drawer: кошик -->
+    <div class="drawer-overlay" id="cartDrawer" aria-hidden="true">
+        <div class="drawer">
+            <div class="drawer-header">
+                <h3><i class="fas fa-shopping-cart"></i> Кошик</h3>
+                <button class="drawer-close" id="closeCart" aria-label="Закрити кошик">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body" id="cartItems"></div>
+            <div class="drawer-footer" id="cartSummary"></div>
+        </div>
+    </div>
+
+    <!-- Модальне вікно: оформлення замовлення -->
+    <div class="modal-overlay" id="orderModal" aria-hidden="true">
+        <div class="modal-content order-modal">
+            <button class="modal-close" id="closeOrderModal" aria-label="Закрити">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="order-modal-body">
+                <h2 class="order-title"><i class="fas fa-receipt"></i> Оформлення замовлення</h2>
+                <p class="muted">Заповніть дані — і ми підтвердимо замовлення найближчим часом.</p>
+
+                <div class="order-summary" id="orderSummary"></div>
+
+                <form id="orderForm" class="order-form" autocomplete="on">
+                    <div class="order-grid">
+                        <div class="order-field">
+                            <label for="orderName">Ім’я *</label>
+                            <input id="orderName" name="name" type="text" required placeholder="Ваше ім’я">
+                        </div>
+                        <div class="order-field">
+                            <label for="orderPhone">Телефон *</label>
+                            <input id="orderPhone" name="phone" type="tel" required placeholder="+380..." inputmode="tel">
+                        </div>
+                        <div class="order-field">
+                            <label for="orderCity">Місто</label>
+                            <input id="orderCity" name="city" type="text" placeholder="Напр.: Рівне">
+                        </div>
+                        <div class="order-field">
+                            <label for="orderDelivery">Доставка</label>
+                            <select id="orderDelivery" name="delivery">
+                                <option value="nova_poshta">Нова пошта</option>
+                                <option value="ukrposhta">Укрпошта</option>
+                                <option value="courier">Кур’єр / адресна</option>
+                                <option value="pickup">Самовивіз</option>
+                            </select>
+                        </div>
+                        <div class="order-field order-wide">
+                            <label for="orderAddress">Відділення / адреса</label>
+                            <input id="orderAddress" name="address" type="text" placeholder="№ відділення або адреса">
+                        </div>
+                        <div class="order-field order-wide">
+                            <label for="orderComment">Коментар</label>
+                            <textarea id="orderComment" name="comment" rows="3" placeholder="Напр.: бажаний час дзвінка, уточнення по сорту..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="order-actions">
+                        <button class="checkout-btn" id="submitOrderBtn" type="submit">
+                            <i class="fas fa-paper-plane"></i> Надіслати замовлення
+                        </button>
+                        <button class="btn-ghost" id="sendViaTelegramBtn" type="button">
+                            <i class="fab fa-telegram"></i> Надіслати через Telegram
+                        </button>
+                    </div>
+
+                    <div class="order-hint" id="orderHint" aria-live="polite"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer: меню / контакти -->
+    <div class="drawer-overlay" id="menuDrawer" aria-hidden="true">
+        <div class="drawer drawer-menu">
+            <div class="drawer-header">
+                <h3><i class="fas fa-bars"></i> Меню</h3>
+                <button class="drawer-close" id="closeMenu" aria-label="Закрити меню">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <div class="menu-links">
+                    <button class="menu-link" id="menuGoHome"><i class="fas fa-seedling"></i> Каталог</button>
+                    <button class="menu-link" id="menuGoCart"><i class="fas fa-shopping-cart"></i> Кошик</button>
+                    <!-- Адмін-посилання прибрано з меню (адмінка доступна лише за прямим посиланням) -->
+                </div>
+
+                <div class="menu-card">
+                    <h4>Швидкий зв’язок</h4>
+                    <p class="muted">Натисніть, щоб написати/подзвонити.</p>
+                    <div class="menu-contacts">
+                        <a class="contact-pill" id="viberLink" href="#" rel="noopener">
+                            <i class="fab fa-viber"></i> Viber
+                        </a>
+                        <a class="contact-pill" id="telegramLink" href="#" target="_blank" rel="noopener">
+                            <i class="fab fa-telegram"></i> Telegram
+                        </a>
+                    </div>
+                </div>
+
+                <div class="menu-card">
+                    <h4>Підказка</h4>
+                    <p class="muted">Контент додається через <b>Адмін-панель</b> (кнопка ⚙️) — або через імпорт/експорт JSON.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тап-бар (лише мобільний) -->
+    <nav class="tab-bar mobile-only" aria-label="Навігація">
+        <button class="tab-btn active" data-tab="home">
+            <i class="fas fa-home"></i>
+            <span>Каталог</span>
+        </button>
+        <button class="tab-btn" data-tab="categories">
+            <i class="fas fa-th-large"></i>
+            <span>Категорії</span>
+        </button>
+        <button class="tab-btn" data-tab="cart">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Кошик</span>
+            <span class="cart-count" id="cartCount">0</span>
+        </button>
+        <button class="tab-btn" data-tab="menu">
+            <i class="fas fa-user"></i>
+            <span>Меню</span>
+        </button>
+    </nav>
+
+    <script src="./src/config/firebase.config.js?v=1.4"></script>
+    <script src="./src/js/modules/utils.js?v=1.4"></script>
+    <script src="./src/js/modules/plants.js?v=1.4"></script>
+    <script src="./src/js/modules/cart.js?v=1.4"></script>
+    <script src="./src/js/modules/search.js?v=1.4"></script>
+    <script src="./src/js/modules/ui.js?v=1.4"></script>
+    <script src="./src/js/modules/orders.js?v=1.4"></script>
+    <script src="./src/js/main.js?v=1.4"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('✅ Service Worker registered'))
+                    .catch(err => console.log('❌ Service Worker registration failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>

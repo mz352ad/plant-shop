@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inna-Flowers - Адмін-панель</title>
+    <link rel="stylesheet" href="./src/css/main.css?v=1.4">
+    <link rel="stylesheet" href="./src/css/admin.css?v=1.4">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <!-- Auth gate: без входу адмін-частина не показується -->
+    <div class="auth-gate" id="authGate" aria-hidden="true" style="display:none">
+        <div class="auth-card">
+            <h2><i class="fas fa-lock"></i>Вхід в адмін-панель</h2>
+            <p>Адмінка прихована від звичайних користувачів. Введіть email і пароль адміністратора.</p>
+            <form id="loginForm">
+                <div class="auth-row">
+                    <input type="email" id="loginEmail" placeholder="Email" autocomplete="username" required>
+                    <input type="password" id="loginPassword" placeholder="Пароль" autocomplete="current-password" required>
+                </div>
+                <div class="auth-actions">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-sign-in-alt"></i> Увійти</button>
+                    <a href="index.html" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> До каталогу</a>
+                </div>
+                <div class="auth-error" id="authError"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-container" id="adminApp" style="display:none">
+        <header class="admin-header">
+            <h1><i class="fas fa-seedling"></i>Адмін-панель</h1>
+            <p>Управління каталогом рослин</p>
+
+            <div class="admin-authbar">
+                <span class="pill"><i class="fas fa-user"></i><span id="authUser">—</span></span>
+                <button class="btn-logout" id="logoutBtn" type="button"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+            </div>
+        </header>
+
+        <nav class="admin-nav">
+            <button class="nav-btn active" data-section="add">Додати рослину</button>
+            <button class="nav-btn" data-section="list">Список рослин</button>
+            <button class="nav-btn" data-section="orders">Замовлення</button>
+        </nav>
+
+        <!-- Секція додавання рослини -->
+        <section id="add-section" class="admin-section active">
+            <h2>Додати нову рослину</h2>
+            
+            <div id="message-container"></div>
+            
+            <form id="addPlantForm" method="post">
+                <div class="form-group">
+                    <label for="plantName">Назва рослини *</label>
+                    <input type="text" id="plantName" name="name" placeholder="Введіть назву рослини" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantCategory">Категорія *</label>
+                    <input type="text" id="plantCategory" name="category" list="categoryOptions" placeholder="Напр.: indoor, garden, exotic, multiflora..." required>
+                    <datalist id="categoryOptions">
+                        <option value="indoor">Кімнатні</option>
+                        <option value="garden">Садові</option>
+                        <option value="exotic">Екзотичні</option>
+                        <option value="multiflora">Мультифлора</option>
+                        <option value="peony">Півонії</option>
+                        <option value="hibiscus">Гібіскус</option>
+                        <option value="hydrangea">Гортензії</option>
+                    </datalist>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantPrice">Ціна (грн) *</label>
+                    <input type="number" id="plantPrice" name="price" min="0" placeholder="Введіть ціну" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantPromoPrice">Акційна ціна (грн)</label>
+                    <input type="number" id="plantPromoPrice" name="promoPrice" min="0" placeholder="Залиште порожнім, якщо немає знижки">
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantPromoEndDate">Дата закінчення акції</label>
+                    <input type="date" id="plantPromoEndDate" name="promoEndDate" placeholder="Дата закінчення знижки">
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantImage">Зображення рослини</label>
+                    <div class="image-upload-container" id="uploadContainer">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <div class="upload-text">
+                            <strong>Натисніть або перетягніть фото сюди</strong>
+                            <small>Підтримуються формати: JPG, PNG, GIF</small>
+                        </div>
+                        <label for="imageFile" class="file-label">
+                            <i class="fas fa-camera"></i> Вибрати фото
+                        </label>
+                        <input type="file" id="imageFile" class="file-input" accept="image/*" style="display: none;">
+                        <input type="hidden" id="plantImage" name="image">
+                    </div>
+                    <div id="imagePreview" class="image-preview" style="display: none;">
+                        <img id="previewImg" src="" alt="Попередній перегляд">
+                        <div style="margin-top: 15px;">
+                            <button type="button" id="removeImage" class="btn btn-danger">
+                                <i class="fas fa-times"></i> Видалити фото
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="plantDescription">Опис</label>
+                    <textarea id="plantDescription" name="description" placeholder="Опис рослини..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Додати рослину
+                </button>
+            </form>
+        </section>
+
+        <!-- Секція списку рослин -->
+        <section id="list-section" class="admin-section">
+            <h2>Список рослин</h2>
+            
+            <div id="plantsList" class="plants-list">
+                <!-- Рослини будуть додаватися через JavaScript -->
+            </div>
+            
+            <div class="export-import">
+                <button class="btn btn-secondary" onclick="exportData()">
+                    <i class="fas fa-download"></i> Експорт даних
+                </button>
+                
+                <label for="importFile" class="file-label">
+                    <i class="fas fa-upload"></i> Імпорт даних
+                </label>
+                <input type="file" id="importFile" class="file-input" accept=".json">
+            </div>
+        </section>
+
+        <!-- Секція замовлень -->
+        <section id="orders-section" class="admin-section">
+            <h2>Замовлення</h2>
+
+            <div class="orders-toolbar">
+                <div class="orders-filters">
+                    <select id="orderStatusFilter">
+                        <option value="all">Всі</option>
+                        <option value="new">Нові</option>
+                        <option value="processing">В роботі</option>
+                        <option value="done">Виконані</option>
+                        <option value="canceled">Скасовані</option>
+                    </select>
+                    <input id="orderSearch" type="text" placeholder="Пошук: ім’я / телефон / ID" autocomplete="off">
+                </div>
+                <button class="btn btn-secondary" id="refreshOrdersBtn" type="button">
+                    <i class="fas fa-rotate"></i> Оновити
+                </button>
+            </div>
+
+            <div id="ordersList" class="orders-list">
+                <!-- Замовлення рендеряться JS -->
+            </div>
+        </section>
+    </div>
+
+    <script src="./src/config/firebase.config.js?v=1.4"></script>
+    <script src="./src/js/admin-modules/auth.js?v=1.4"></script>
+    <script src="./src/js/admin-modules/orders.js?v=1.5.1"></script>
+    <script src="./src/js/admin-modules/plants.js?v=1.5.2"></script>
+    <script src="./src/js/admin-main.js?v=1.5.1"></script>
+    <!-- Service Worker Registration -->
+    <script>
+        const isLocal = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+        const isAdmin = location.pathname.includes("admin.html");
+        if ("serviceWorker" in navigator && !isLocal && !isAdmin) {
+            window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+        }
+    </script>
+</body>
+</html> 

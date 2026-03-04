@@ -1,0 +1,16 @@
+{
+  "name": "plant-shop",
+  "private": true,
+  "version": "1.4.0",
+  "scripts": {
+    "start": "firebase emulators:start",
+    "start:only": "firebase emulators:start --only hosting,firestore,auth",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:functions": "firebase deploy --only functions",
+    "export:data": "firebase emulators:export ./local-data"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.8.0"
+  }
+}
